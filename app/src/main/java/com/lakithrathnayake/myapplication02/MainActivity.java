@@ -41,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
     String mPermission = Manifest.permission.ACCESS_FINE_LOCATION;
 
     GPSTracker gps;
+    double latitude = 0;
+    double longitude = 0;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -151,40 +153,42 @@ public class MainActivity extends AppCompatActivity {
             gps = new GPSTracker(MainActivity.this);
 
             if(gps.canGetLocation()) {
-                double latitude = gps.getLatitude();
-                double longitude = gps.getLongitude();
+                latitude = gps.getLatitude();
+                longitude = gps.getLongitude();
 
                 Toast.makeText(getApplicationContext(), "Your Location is - \nLat: "
                         + latitude + "\nLong: " + longitude, Toast.LENGTH_LONG).show();
+                addNotification();
             } else gps.showSettingsAlert();
         });
 
     }
 
-//    private void addNotification() {
-//        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-//        NotificationCompat.Builder builder;
-//
-//        // Create a notification channel for Android 8.0+
-//        String channelId = "example_channel_id";
-//        CharSequence channelName = "Example Channel";
-//        String channelDescription = "Channel for test notifications";
-//        int importance = NotificationManager.IMPORTANCE_DEFAULT;
-//        NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
-//        channel.setDescription(channelDescription);
-//        manager.createNotificationChannel(channel);
-//
-//        // Associate the channel with the builder
-//        builder = new NotificationCompat.Builder(this, channelId);
-//
-//        builder.setSmallIcon(R.drawable.abc)
-//                .setContentTitle("Notification Example")
-//                .setContentText("This is a test notification");
-//
-//        Intent notificationIntent = new Intent(this, MainActivity.class);
-//        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
-//        builder.setContentIntent(contentIntent);
-//
-//        manager.notify(0, builder.build());
-//    }
+    private void addNotification() {
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationCompat.Builder builder;
+
+        // Create a notification channel for Android 8.0+
+        String channelId = "example_channel_id";
+        CharSequence channelName = "Example Channel";
+        String channelDescription = "Channel for test notifications";
+        int importance = NotificationManager.IMPORTANCE_DEFAULT;
+        NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
+        channel.setDescription(channelDescription);
+        manager.createNotificationChannel(channel);
+
+        // Associate the channel with the builder
+        builder = new NotificationCompat.Builder(this, channelId);
+
+        builder.setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("Your Location")
+                .setContentText("Your Location is - Lat: "
+                        + latitude + ", Long: " + longitude);
+
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+        builder.setContentIntent(contentIntent);
+
+        manager.notify(0, builder.build());
+    }
 }

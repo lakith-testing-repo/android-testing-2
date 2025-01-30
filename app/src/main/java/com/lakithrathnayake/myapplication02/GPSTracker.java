@@ -1,13 +1,15 @@
 package com.lakithrathnayake.myapplication02;
 
 import android.app.AlertDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
@@ -16,6 +18,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 public class GPSTracker extends Service implements LocationListener {
 
@@ -31,7 +34,7 @@ public class GPSTracker extends Service implements LocationListener {
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 1; // 10 meters
 
     // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 1000 * 60; // 1 minute
+    private static final long MIN_TIME_BW_UPDATES = 1000; // 1 sec
 
     double latitude;
     double longitude;
@@ -147,9 +150,33 @@ public class GPSTracker extends Service implements LocationListener {
         return null;
     }
 
+    private Location previousLocation = null;
+
     @Override
     public void onLocationChanged(@NonNull Location location) {
+        if(previousLocation != null) {
+            float distance = previousLocation.distanceTo(location);
+            if(distance >= 1) {
+                previousLocation = location;
+                sendLocationNotification(location.getLatitude(), location.getLongitude());
+            }
+        } else previousLocation = location;
+    }
 
+    private void sendLocationNotification(double latitude, double longitude) {
+        NotificationManager manager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        String channelId = "example_channel_id";
+        NotificationChannel channel = new NotificationChannel(
+                channelId, "Location Updates", NotificationManager.IMPORTANCE_DEFAULT);
+        manager.createNotificationChannel(channel);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext, channelId)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("Location Update")
+                .setContentText("Lat: " + latitude + ", Long: " + longitude)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+        manager.notify((int) System.currentTimeMillis(), builder.build());
     }
 
     @Override
