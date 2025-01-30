@@ -1,13 +1,16 @@
 package com.lakithrathnayake.myapplication02;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,9 +20,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -30,6 +35,12 @@ public class MainActivity extends AppCompatActivity {
     String msg;
     private RelativeLayout.LayoutParams layoutParams;
     Button b1;
+
+    Button btnShowLocation;
+    private static final int REQUEST_CODE_PERMISSION = 2;
+    String mPermission = Manifest.permission.ACCESS_FINE_LOCATION;
+
+    GPSTracker gps;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -121,40 +132,59 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
 
-        b1 = findViewById(R.id.button);
-        b1.setOnClickListener(v -> {
-            addNotification();
-        });
-    }
+//        b1 = findViewById(R.id.button);
+//        b1.setOnClickListener(v -> {
+//            addNotification();
+//        });
 
-    private void addNotification() {
-        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationCompat.Builder builder;
-
-        // Create a notification channel for Android 8.0+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            String channelId = "example_channel_id";
-            CharSequence channelName = "Example Channel";
-            String channelDescription = "Channel for test notifications";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
-            channel.setDescription(channelDescription);
-            manager.createNotificationChannel(channel);
-
-            // Associate the channel with the builder
-            builder = new NotificationCompat.Builder(this, channelId);
-        } else {
-            builder = new NotificationCompat.Builder(this);
+        try {
+            if(ActivityCompat.checkSelfPermission(this, mPermission) != PackageManager.PERMISSION_GRANTED) {
+               ActivityCompat.requestPermissions(this, new String[]{mPermission}, REQUEST_CODE_PERMISSION);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
-        builder.setSmallIcon(R.drawable.abc)
-                .setContentTitle("Notification Example")
-                .setContentText("This is a test notification");
+        btnShowLocation = findViewById(R.id.button);
 
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        builder.setContentIntent(contentIntent);
+        btnShowLocation.setOnClickListener(v -> {
+            gps = new GPSTracker(MainActivity.this);
 
-        manager.notify(0, builder.build());
+            if(gps.canGetLocation()) {
+                double latitude = gps.getLatitude();
+                double longitude = gps.getLongitude();
+
+                Toast.makeText(getApplicationContext(), "Your Location is - \nLat: "
+                        + latitude + "\nLong: " + longitude, Toast.LENGTH_LONG).show();
+            } else gps.showSettingsAlert();
+        });
+
     }
+
+//    private void addNotification() {
+//        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//        NotificationCompat.Builder builder;
+//
+//        // Create a notification channel for Android 8.0+
+//        String channelId = "example_channel_id";
+//        CharSequence channelName = "Example Channel";
+//        String channelDescription = "Channel for test notifications";
+//        int importance = NotificationManager.IMPORTANCE_DEFAULT;
+//        NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
+//        channel.setDescription(channelDescription);
+//        manager.createNotificationChannel(channel);
+//
+//        // Associate the channel with the builder
+//        builder = new NotificationCompat.Builder(this, channelId);
+//
+//        builder.setSmallIcon(R.drawable.abc)
+//                .setContentTitle("Notification Example")
+//                .setContentText("This is a test notification");
+//
+//        Intent notificationIntent = new Intent(this, MainActivity.class);
+//        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+//        builder.setContentIntent(contentIntent);
+//
+//        manager.notify(0, builder.build());
+//    }
 }
