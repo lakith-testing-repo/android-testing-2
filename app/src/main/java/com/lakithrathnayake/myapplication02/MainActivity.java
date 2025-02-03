@@ -6,6 +6,8 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.Context;
@@ -17,8 +19,10 @@ import android.util.Log;
 import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -30,11 +34,17 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.ArrayList;
+import java.util.Set;
+
 public class MainActivity extends AppCompatActivity {
     ImageView img;
     String msg;
     private RelativeLayout.LayoutParams layoutParams;
-    Button b1;
+    Button b1,b2,b3,b4;
+    private BluetoothAdapter BA;
+    private Set<BluetoothDevice> pairedDevices;
+    ListView lv;
 
     Button btnShowLocation;
     private static final int REQUEST_CODE_PERMISSION = 2;
@@ -139,29 +149,70 @@ public class MainActivity extends AppCompatActivity {
 //            addNotification();
 //        });
 
-        try {
-            if(ActivityCompat.checkSelfPermission(this, mPermission) != PackageManager.PERMISSION_GRANTED) {
-               ActivityCompat.requestPermissions(this, new String[]{mPermission}, REQUEST_CODE_PERMISSION);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+//        try {
+//            if(ActivityCompat.checkSelfPermission(this, mPermission) != PackageManager.PERMISSION_GRANTED) {
+//               ActivityCompat.requestPermissions(this, new String[]{mPermission}, REQUEST_CODE_PERMISSION);
+//            }
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        btnShowLocation = findViewById(R.id.button);
+//
+//        btnShowLocation.setOnClickListener(v -> {
+//            gps = new GPSTracker(MainActivity.this);
+//
+//            if(gps.canGetLocation()) {
+//                latitude = gps.getLatitude();
+//                longitude = gps.getLongitude();
+//
+//                Toast.makeText(getApplicationContext(), "Your Location is - \nLat: "
+//                        + latitude + "\nLong: " + longitude, Toast.LENGTH_LONG).show();
+//                addNotification();
+//            } else gps.showSettingsAlert();
+//        });
+
+        b1 = findViewById(R.id.button);
+        b2 = findViewById(R.id.button2);
+        b3 = findViewById(R.id.button3);
+        b4 = findViewById(R.id.button4);
+
+        BA = BluetoothAdapter.getDefaultAdapter();
+        lv = findViewById(R.id.listView);
+
+    }
+
+    public void on(View v) {
+        if(!BA.isEnabled()) {
+            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(turnOn, 0);
+            Toast.makeText(getApplicationContext(), "Turned on",Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "Already on",Toast.LENGTH_LONG).show();
         }
+    }
 
-        btnShowLocation = findViewById(R.id.button);
+    public void off (View v) {
+        BA.disable();
+        Toast.makeText(getApplicationContext(), "Turned off" ,Toast.LENGTH_LONG).show();
+    }
 
-        btnShowLocation.setOnClickListener(v -> {
-            gps = new GPSTracker(MainActivity.this);
+    public  void visible(View v){
+        Intent getVisible = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        startActivityForResult(getVisible, 0);
+    }
 
-            if(gps.canGetLocation()) {
-                latitude = gps.getLatitude();
-                longitude = gps.getLongitude();
+    public void list(View v) {
+        pairedDevices = BA.getBondedDevices();
 
-                Toast.makeText(getApplicationContext(), "Your Location is - \nLat: "
-                        + latitude + "\nLong: " + longitude, Toast.LENGTH_LONG).show();
-                addNotification();
-            } else gps.showSettingsAlert();
-        });
-
+        ArrayList list = new ArrayList();
+        for (BluetoothDevice bt :
+                pairedDevices) {
+            list.add(bt.getName());
+        }
+        Toast.makeText(getApplicationContext(), "Showing Paired Devices",Toast.LENGTH_SHORT).show();
+        ArrayAdapter adapter = new ArrayAdapter(this, R.layout.list_item, list);
+        lv.setAdapter(adapter);
     }
 
     private void addNotification() {
