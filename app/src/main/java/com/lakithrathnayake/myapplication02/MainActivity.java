@@ -13,8 +13,10 @@ import android.content.ClipDescription;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.DragEvent;
 import android.view.MotionEvent;
@@ -27,9 +29,11 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -53,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
     GPSTracker gps;
     double latitude = 0;
     double longitude = 0;
+
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
+
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -172,14 +179,43 @@ public class MainActivity extends AppCompatActivity {
 //            } else gps.showSettingsAlert();
 //        });
 
-        b1 = findViewById(R.id.button);
-        b2 = findViewById(R.id.button2);
-        b3 = findViewById(R.id.button3);
-        b4 = findViewById(R.id.button4);
+//        b1 = findViewById(R.id.button);
+//        b2 = findViewById(R.id.button2);
+//        b3 = findViewById(R.id.button3);
+//        b4 = findViewById(R.id.button4);
+//
+//        BA = BluetoothAdapter.getDefaultAdapter();
+//        lv = findViewById(R.id.listView);
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 100);
+//        }
+//
+//        Button buttonCamera = findViewById(R.id.buttonOpenCamera);
+//        buttonCamera.setOnClickListener(v -> {
+//            openCamera();
+//        });
 
-        BA = BluetoothAdapter.getDefaultAdapter();
-        lv = findViewById(R.id.listView);
+    }
 
+    private void openCamera() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if(takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        } else {
+            Toast.makeText(this, "No camera app found", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            if (data != null && data.getExtras() != null) {
+                // Get the captured image
+                Bitmap imageBitmap = (Bitmap) data.getExtras().get("data");
+                // You can now use the imageBitmap, e.g., display it in an ImageView
+            }
+        }
     }
 
     public void on(View v) {
